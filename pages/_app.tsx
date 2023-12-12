@@ -1,18 +1,23 @@
-import '../styles/globals.css';
-import '@rainbow-me/rainbowkit/styles.css';
-import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import type { AppProps } from 'next/app';
-import { configureChains, createConfig, WagmiConfig } from 'wagmi';
+import "@decent.xyz/box-ui/index.css";
+import "../styles/globals.css";
+import type { AppProps } from "next/app";
+import "@rainbow-me/rainbowkit/styles.css";
+import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import {
   arbitrum,
-  goerli,
   mainnet,
   optimism,
   polygon,
   base,
-  zora,
-} from 'wagmi/chains';
-import { publicProvider } from 'wagmi/providers/public';
+  avalanche,
+} from "wagmi/chains";
+import { configureChains, createConfig, WagmiConfig } from "wagmi";
+import { publicProvider } from "wagmi/providers/public";
+import { alchemyProvider } from "wagmi/providers/alchemy";
+import localFont from "next/font/local";
+import { BoxHooksContextProvider } from "@decent.xyz/box-hooks";
+import { BoxActionContextProvider } from "../lib/contexts/decentActionContext";
+import RouteSelectProvider from "../lib/contexts/routeSelectContext";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [
@@ -21,18 +26,15 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
     optimism,
     arbitrum,
     base,
-    zora,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [goerli] : []),
+    avalanche,
   ],
   [publicProvider()]
 );
-
 const { connectors } = getDefaultWallets({
-  appName: 'RainbowKit App',
-  projectId: '657e1ae0f24d728e67835dc3125b5923',
+  appName: 'FlipFLop',
+  projectId: process.env.NEXT_PUBLIC_W3M_PROJECT_ID,
   chains,
 });
-
 const wagmiConfig = createConfig({
   autoConnect: true,
   connectors,
@@ -40,14 +42,28 @@ const wagmiConfig = createConfig({
   webSocketPublicClient,
 });
 
-function MyApp({ Component, pageProps }: AppProps) {
+/*
+export const monument = localFont({
+  src: "../fonts/EduMonumentGroteskVariable.woff2",
+  variable: "--font-monument",
+});
+*/
+export default function App({ Component, pageProps }: AppProps) {
   return (
     <WagmiConfig config={wagmiConfig}>
       <RainbowKitProvider chains={chains}>
-        <Component {...pageProps} />
+        <BoxHooksContextProvider
+          apiKey={process.env.NEXT_PUBLIC_DECENT_API_KEY as string}
+        >
+          <RouteSelectProvider>
+            <BoxActionContextProvider>
+              
+              <Component {...pageProps} />
+      
+            </BoxActionContextProvider>
+          </RouteSelectProvider>
+        </BoxHooksContextProvider>
       </RainbowKitProvider>
     </WagmiConfig>
   );
 }
-
-export default MyApp;
